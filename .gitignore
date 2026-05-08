@@ -1,0 +1,9 @@
+*.iml
+**/*.iml
+
+*.env
+**/*.env
+
+.kilo/
+.idea/
+dist/

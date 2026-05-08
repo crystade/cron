@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cron Playground</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --text: #111111;
+      --muted: #666666;
+      --border: #e5e5e5;
+      --border-strong: #cfcfcf;
+      --focus: #111111;
+      --danger: #b00020;
+      --ok: #0f7b3f;
+      --code: #f5f5f5;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg);
+      font-family: var(--sans);
+      line-height: 1.5;
+    }
+
+    .wrap {
+      width: min(960px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1;
+      letter-spacing: -0.06em;
+    }
+
+    .lede {
+      max-width: 620px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .status {
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .status.ready { color: var(--ok); }
+    .status.error { color: var(--danger); }
+
+    .panel, .syntax {
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .panel { padding: 24px; }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    textarea, input, select {
+      width: 100%;
+      border: 1px solid var(--border-strong);
+      border-radius: 0;
+      background: var(--surface);
+      color: var(--text);
+      font: 600 1rem var(--mono);
+      outline: none;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 1px var(--focus);
+    }
+
+    textarea {
+      min-height: 104px;
+      resize: vertical;
+      padding: 14px;
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      line-height: 1.45;
+    }
+
+    input, select { padding: 12px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 140px;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button {
+      border: 1px solid var(--text);
+      border-radius: 0;
+      padding: 11px 14px;
+      cursor: pointer;
+      color: var(--surface);
+      background: var(--text);
+      font: 700 0.92rem var(--sans);
+    }
+
+    button:hover { opacity: 0.86; }
+    button:disabled { cursor: wait; opacity: 0.5; }
+
+    .secondary, .example {
+      color: var(--text);
+      background: var(--surface);
+      border-color: var(--border-strong);
+    }
+
+    .examples {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .example {
+      padding: 12px;
+      text-align: left;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .error-box {
+      display: none;
+      margin-top: 18px;
+      padding: 12px;
+      border: 1px solid var(--danger);
+      background: #fff7f7;
+      color: var(--danger);
+      font-weight: 650;
+    }
+
+    .results {
+      display: grid;
+      gap: 0;
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .run {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .num {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+
+    .time-main {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .time-sub {
+      margin-top: 3px;
+      color: var(--muted);
+      font: 500 0.82rem var(--mono);
+      overflow-wrap: anywhere;
+    }
+
+    .syntax {
+      margin-top: 20px;
+      padding: 20px 24px;
+    }
+
+    .syntax h2 {
+      margin: 0 0 14px;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .syntax-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .field {
+      padding: 12px;
+      background: var(--surface);
+    }
+
+    .field b {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+    }
+
+    .field span, code {
+      font-family: var(--mono);
+    }
+
+    .field span {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    @media (max-width: 760px) {
+      .wrap { padding: 28px 0; }
+      header { display: block; }
+      .status { display: block; margin-top: 16px; }
+      .grid, .examples, .syntax-grid { grid-template-columns: 1fr; }
+      .panel, .syntax { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div>
+        <h1>Cron Playground</h1>
+        <p class="lede">
+          Enter a five-field cron expression, optionally prefixed with <code>CRON_TZ=</code>,
+          and preview upcoming run times from <code>dist/cron.wasm</code>.
+        </p>
+      </div>
+      <span id="status" class="status">Starting runtime</span>
+    </header>
+
+    <section class="panel" aria-label="Cron playground">
+      <label for="expr">Cron expression</label>
+      <textarea id="expr" spellcheck="false">0 9 * * mon-fri</textarea>
+
+      <div class="grid">
+        <div>
+          <label for="from">Start from</label>
+          <input id="from" type="datetime-local">
+        </div>
+        <div>
+          <label for="count">Runs</label>
+          <select id="count">
+            <option>5</option>
+            <option selected>10</option>
+            <option>25</option>
+            <option>50</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="calculate" disabled>Loading WASM...</button>
+        <button class="secondary" id="now" type="button">Use now</button>
+      </div>
+
+      <div class="examples" aria-label="Example expressions">
+        <button class="example" type="button" data-spec="0 * * * *">0 * * * *<br>Every hour</button>
+        <button class="example" type="button" data-spec="*/15 * * * *">*/15 * * * *<br>Every 15 minutes</button>
+        <button class="example" type="button" data-spec="0 9 * * mon-fri">0 9 * * mon-fri<br>Weekdays at 09:00</button>
+        <button class="example" type="button" data-spec="CRON_TZ=America/New_York 0 8 * * *">CRON_TZ=America/New_York 0 8 * * *<br>NY daily 08:00</button>
+      </div>
+
+      <div id="error" class="error-box" role="alert"></div>
+      <div id="results" class="results" aria-live="polite"></div>
+    </section>
+
+    <section class="syntax">
+      <h2>Syntax</h2>
+      <div class="syntax-grid">
+        <div class="field"><b>Minute</b><span>0-59</span></div>
+        <div class="field"><b>Hour</b><span>0-23</span></div>
+        <div class="field"><b>Day</b><span>1-31</span></div>
+        <div class="field"><b>Month</b><span>1-12 / jan-dec</span></div>
+        <div class="field"><b>Weekday</b><span>0-6 / sun-sat</span></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="wasm_exec.js"></script>
+  <script>
+    const els = {
+      expr: document.getElementById('expr'),
+      from: document.getElementById('from'),
+      count: document.getElementById('count'),
+      calculate: document.getElementById('calculate'),
+      now: document.getElementById('now'),
+      status: document.getElementById('status'),
+      error: document.getElementById('error'),
+      results: document.getElementById('results')
+    };
+
+    let wasmReady = false;
+
+    function pad(value) {
+      return String(value).padStart(2, '0');
+    }
+
+    function toLocalInputValue(date) {
+      return [
+        date.getFullYear(), '-', pad(date.getMonth() + 1), '-', pad(date.getDate()),
+        'T', pad(date.getHours()), ':', pad(date.getMinutes())
+      ].join('');
+    }
+
+    function readFromMillis() {
+      const value = els.from.value;
+      return value ? new Date(value).getTime() : Date.now();
+    }
+
+    function setStatus(text, state) {
+      els.status.textContent = text;
+      els.status.className = 'status' + (state ? ' ' + state : '');
+    }
+
+    function showError(message) {
+      els.error.textContent = message;
+      els.error.style.display = message ? 'block' : 'none';
+    }
+
+    function formatRun(ms) {
+      const date = new Date(ms);
+      return {
+        main: new Intl.DateTimeFormat(undefined, {
+          weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short'
+        }).format(date),
+        sub: date.toISOString() + ' | Unix ms: ' + ms
+      };
+    }
+
+    function normalizeNextResult(result) {
+      if (result && result.error) throw new Error(result.error);
+      if (result && typeof result.unixMillis === 'number') return result.unixMillis;
+      if (typeof result === 'number') return result;
+      if (result == null) throw new Error('No next schedule was found within the parser year limit.');
+      throw new Error('Unexpected WASM response.');
+    }
+
+    function calculate() {
+      if (!wasmReady) return;
+
+      showError('');
+      els.results.innerHTML = '';
+
+      const specText = els.expr.value.trim();
+      if (!specText) {
+        showError('Enter a cron expression first.');
+        return;
+      }
+
+      let schedule = null;
+      try {
+        schedule = window.cronParse(specText);
+        if (schedule && schedule.error) throw new Error(schedule.error);
+        if (!schedule || typeof schedule.next !== 'function') throw new Error('cronParse did not return a reusable schedule.');
+
+        const fragment = document.createDocumentFragment();
+        let cursor = readFromMillis();
+        const total = Number(els.count.value);
+
+        for (let i = 1; i <= total; i += 1) {
+          const nextMs = normalizeNextResult(schedule.next(cursor));
+          const display = formatRun(nextMs);
+          const row = document.createElement('div');
+          row.className = 'run';
+          row.innerHTML = '<div class="num">#' + i + '</div><div><div class="time-main"></div><div class="time-sub"></div></div>';
+          row.querySelector('.time-main').textContent = display.main;
+          row.querySelector('.time-sub').textContent = display.sub;
+          fragment.appendChild(row);
+          cursor = nextMs;
+        }
+
+        els.results.appendChild(fragment);
+      } catch (error) {
+        showError(error.message || String(error));
+      } finally {
+        if (schedule && typeof schedule.free === 'function') schedule.free();
+      }
+    }
+
+    async function loadWasm() {
+      try {
+        const go = new Go();
+        const response = await fetch('dist/cron.wasm');
+        if (!response.ok) throw new Error('Unable to fetch dist/cron.wasm: HTTP ' + response.status);
+
+        const bytes = await response.arrayBuffer();
+        const result = await WebAssembly.instantiate(bytes, go.importObject);
+        go.run(result.instance);
+
+        wasmReady = true;
+        els.calculate.disabled = false;
+        els.calculate.textContent = 'Calculate next runs';
+        setStatus('WASM ready', 'ready');
+        calculate();
+      } catch (error) {
+        els.calculate.disabled = true;
+        els.calculate.textContent = 'WASM unavailable';
+        setStatus('Runtime error', 'error');
+        showError(error.message || String(error));
+      }
+    }
+
+    els.calculate.addEventListener('click', calculate);
+    els.expr.addEventListener('keydown', (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') calculate();
+    });
+    els.now.addEventListener('click', () => {
+      els.from.value = toLocalInputValue(new Date());
+      calculate();
+    });
+    document.querySelectorAll('[data-spec]').forEach((button) => {
+      button.addEventListener('click', () => {
+        els.expr.value = button.dataset.spec;
+        calculate();
+      });
+    });
+
+    els.from.value = toLocalInputValue(new Date());
+    loadWasm();
+  </script>
+</body>
+</html>
