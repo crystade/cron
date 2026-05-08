@@ -20,8 +20,13 @@ jobs:
       - name: Build WASM
         run: |
           mkdir -p ./dist
-          docker run --rm -v ${{ github.workspace }}:/src -w /src ghcr.io/tinygo-org/tinygo:0.41.1 /bin/bash -c "git config --global --add safe.directory '*' && tinygo build -target wasm -o ./dist/cron.wasm ./cmd/wasm"
-          sudo chown -R $USER:$USER ./dist
+          docker run --rm \
+            --user $(id -u):$(id -g) \
+            -e GOCACHE=/tmp \
+            -v ${{ github.workspace }}:/src \
+            -w /src \
+            ghcr.io/tinygo-org/tinygo:0.41.1 \
+            tinygo build -target wasm -o ./dist/cron.wasm ./cmd/wasm
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
