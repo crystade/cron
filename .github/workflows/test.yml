@@ -23,3 +23,6 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Build WASM
+      run: GOOS=js GOARCH=wasm go build -v ./cmd/wasm
