@@ -1,0 +1,28 @@
+name: TinyGo WASM Release
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Pull TinyGo Docker Image
+        run: docker pull ghcr.io/tinygo-org/tinygo:0.41.1
+
+      - name: Build WASM
+        run: |
+          mkdir -p ./dist
+          docker run --rm -v ${{ github.workspace }}:/src -w /src ghcr.io/tinygo-org/tinygo:0.41.1 tinygo build -target wasm -o ./dist/cron.wasm ./cmd/wasm
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist/cron.wasm
