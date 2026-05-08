@@ -14,19 +14,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Pull TinyGo Docker Image
-        run: docker pull ghcr.io/tinygo-org/tinygo:0.41.1
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install TinyGo
+        run: |
+          wget https://github.com/tinygo-org/tinygo/releases/download/v0.41.1/tinygo_0.41.1_amd64.deb
+          sudo dpkg -i tinygo_0.41.1_amd64.deb
+
+          tinygo version
 
       - name: Build WASM
         run: |
           mkdir -p ./dist
-          docker run --rm \
-            --user $(id -u):$(id -g) \
-            -e GOCACHE=/tmp \
-            -v ${{ github.workspace }}:/src \
-            -w /src \
-            ghcr.io/tinygo-org/tinygo:0.41.1 \
-            tinygo build -target wasm -o ./dist/cron.wasm ./cmd/wasm
+          tinygo build -target wasm -o ./dist/cron.wasm ./cmd/wasm
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
