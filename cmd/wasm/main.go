@@ -1,3 +1,5 @@
+//go:build js && wasm
+
 package main
 
 import (
@@ -9,7 +11,6 @@ import (
 
 func main() {
 	js.Global().Set("cronParse", js.FuncOf(cronParse))
-	// Legacy: parse and compute next in one call
 	js.Global().Set("cronNext", js.FuncOf(cronNext))
 
 	select {}
