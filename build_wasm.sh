@@ -1,0 +1,1 @@
+GOOS=js GOARCH=wasm go build -o ./dist/cron.wasm -v ./cmd/wasm

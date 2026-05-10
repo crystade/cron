@@ -369,7 +369,6 @@
 
     function normalizeNextResult(result) {
       if (result && result.error) throw new Error(result.error);
-      if (result && typeof result.unixMillis === 'number') return result.unixMillis;
       if (typeof result === 'number') return result;
       if (result == null) throw new Error('No next schedule was found within the parser year limit.');
       throw new Error('Unexpected WASM response.');

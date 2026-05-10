@@ -1,11 +1,13 @@
 package cron
 
 import (
+	_ "embed"
 	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"time"
+	_ "time/tzdata"
 )
 
 // Parser is a cron expression parser with configurable options.

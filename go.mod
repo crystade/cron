@@ -1,3 +1,3 @@
 module github.com/crystade/cron
 
-go 1.24
+go 1.26

@@ -86,9 +86,9 @@ WebAssembly.instantiateStreaming(fetch("cron.wasm"), go.importObject)
         } else {
             const now = Temporal.Now.instant();
             const r1 = spec.next(now.epochMilliseconds);
-            console.log("Next run:", Temporal.Instant.fromEpochMilliseconds(r1.unixMillis));
-            const r2 = spec.next(r1.unixMillis);
-            console.log("Run after:", Temporal.Instant.fromEpochMilliseconds(r2.unixMillis));
+            console.log("Next run:", Temporal.Instant.fromEpochMilliseconds(r1));
+            const r2 = spec.next(r1);
+            console.log("Run after:", Temporal.Instant.fromEpochMilliseconds(r2));
             spec.free(); // release Go handles when done
         }
 
@@ -97,7 +97,7 @@ WebAssembly.instantiateStreaming(fetch("cron.wasm"), go.importObject)
         if (r.error) {
             console.error(r.error);
         } else {
-            console.log("Next run:", Temporal.Instant.fromEpochMilliseconds(r.unixMillis));
+            console.log("Next run:", Temporal.Instant.fromEpochMilliseconds(r));
         }
     });
 ```
