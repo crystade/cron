@@ -17,6 +17,18 @@ type Parser struct {
 	// YearLimit is the maximum number of years to search for the next schedule.
 	// Default is 5 years if not set or set to 0.
 	YearLimit int
+
+	// MinInterval is the minimum allowed interval between consecutive cron fires.
+	// If set, the parser will validate that the cron expression does not fire more
+	// frequently than this duration. Must be between 1m and 1h (inclusive).
+	// A zero value disables minimum interval checking.
+	MinInterval time.Duration
+
+	// MinIntervalCorrection controls behavior when a cron expression fires more
+	// frequently than MinInterval.
+	// If true, the schedule is corrected to fire at the MinInterval rate instead of
+	// returning an error. If false (default), Parse returns an error.
+	MinIntervalCorrection bool
 }
 
 // NewParser creates a new Parser with the specified year limit.
@@ -87,6 +99,21 @@ func (p *Parser) Parse(spec string) (Schedule, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Enforce minimum interval if configured.
+	if p.MinInterval > 0 {
+		if err := validateMinInterval(p.MinInterval); err != nil {
+			return nil, err
+		}
+
+		effective := computeMinInterval(minute, hour)
+		if effective < p.MinInterval {
+			if !p.MinIntervalCorrection {
+				return nil, fmt.Errorf("cron fires every %v, which is more frequent than the minimum interval %v", effective, p.MinInterval)
+			}
+			minute, hour = correctToMinInterval(p.MinInterval)
+		}
 	}
 
 	return &SpecSchedule{

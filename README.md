@@ -62,6 +62,36 @@ next := schedule.Next(time.Now())
 fmt.Println("Next leap year Feb 29:", next)
 ```
 
+### Minimum Interval Enforcement
+
+The parser supports a **min-interval** feature that prevents cron expressions from firing more frequently than a configured threshold. This is useful for safeguarding against overly aggressive schedules in production.
+
+`MinInterval` accepts a `time.Duration` between **1 minute** and **1 hour**. When set, the parser computes the smallest gap between consecutive fire times within a day and compares it against the limit. A zero value (default) disables the check.
+
+There are two modes of enforcement, controlled by `MinIntervalCorrection`:
+
+| `MinIntervalCorrection` | Behavior on violation |
+|--------------------------|----------------------------------------------|
+| `false` (default) | `Parse` returns an error |
+| `true` | The schedule is silently corrected to the min-interval rate |
+
+```go
+// Reject expressions that fire more often than every 5 minutes
+parser := &cron.Parser{
+    MinInterval: 5 * time.Minute,
+}
+schedule, err := parser.Parse("*/3 * * * *")
+// err: "cron fires every 3m, which is more frequent than the minimum interval 5m"
+
+// Alternatively, correct the schedule to the minimum interval instead of erroring
+parser := &cron.Parser{
+    MinInterval:           10 * time.Minute,
+    MinIntervalCorrection: true,
+}
+schedule, err := parser.Parse("* * * * *")
+// No error; the schedule now fires every 10 minutes instead of every minute
+```
+
 ### WASM/TinyGo Support
 
 This library is fully compatible with TinyGo and WASM. Build for WASM:
